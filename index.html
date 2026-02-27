@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Test Formatter</title>
+    <title>Test Formatter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -22,7 +22,7 @@
             line-height: 1.6;
         }
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
         label {
             display: block;
@@ -31,13 +31,62 @@
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.025em;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.6rem;
         }
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+        /* Custom UI Components */
+        .selector-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 0.5rem;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+        }
+        .selector-btn:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .selector-btn.active {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+
+        .dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem 0;
+            user-select: none;
+        }
+        .dropdown-arrow {
+            transition: transform 0.2s ease;
+        }
+        .dropdown-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .dropdown-container.closed .dropdown-content {
+            max-height: 0;
+            display: none;
+        }
+        .dropdown-container.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
         .config-row {
             display: grid;
             grid-template-columns: 3.5rem 1fr 3rem;
@@ -54,6 +103,12 @@
             grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             gap: 0.5rem;
         }
+        .section-custom-row {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
         .custom-scroll::-webkit-scrollbar {
             width: 4px;
         }
@@ -62,16 +117,55 @@
             border-radius: 4px;
         }
         .hidden { display: none; }
+
+        /* Fullscreen Overlay Styles */
+        #fullscreenOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            padding: 2rem;
+        }
+        #fullscreenOverlay.active {
+            display: flex;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
+    <!-- Fullscreen View Container -->
+    <div id="fullscreenOverlay">
+        <div class="max-w-5xl mx-auto w-full flex flex-col h-full">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Full Screen Preview</h2>
+                    <p class="text-slate-500 text-sm">Reviewing your document layout.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="copyToClipboard('fullscreenResult')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg transition active:scale-95 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        Copy
+                    </button>
+                    <button onclick="closeFullScreen()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 px-6 rounded-lg transition active:scale-95">
+                        Exit View
+                    </button>
+                </div>
+            </div>
+            <textarea id="fullscreenResult" class="flex-grow w-full card p-12 text-xl border-slate-200 shadow-xl focus:ring-0" readonly></textarea>
+        </div>
+    </div>
+
     <div class="max-w-7xl mx-auto">
         <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tight">Test Formatter Pro</h1>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight">Test Formatter</h1>
                 <p class="text-slate-500">Professional numbering for complex test structures.</p>
             </div>
-            <button onclick="copyToClipboard()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg transition active:scale-95">
+            <button onclick="copyToClipboard('result')" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg transition active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 Copy Document
             </button>
@@ -79,7 +173,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <!-- Settings Panel -->
-            <div class="lg:col-span-5 card p-6 border border-slate-200 sticky top-8">
+            <div class="lg:col-span-5 card p-6 border border-slate-200 sticky top-8 max-h-[90vh] overflow-y-auto custom-scroll">
                 <h2 class="text-sm font-black text-slate-400 mb-6 uppercase tracking-widest border-b pb-2">Layout & Structure</h2>
 
                 <!-- Mode Switcher -->
@@ -91,36 +185,62 @@
                 <!-- Basic Question Count (Single Mode Only) -->
                 <div id="singleModeSettings" class="form-group">
                     <label for="count">Number of Questions</label>
-                    <input type="number" id="count" value="10" onfocus="this.select()" oninput="handleStructureChange()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2.5 border">
+                    <input type="number" id="count" value="10" onfocus="this.select()" oninput="handleStructureChange()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-3 border">
                 </div>
 
                 <!-- Multi Section Settings (Multi Mode Only) -->
-                <div id="multiModeSettings" class="hidden space-y-4 mb-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label for="sectionCount">Number of Sections</label>
-                            <input type="number" id="sectionCount" value="2" min="1" onfocus="this.select()" oninput="renderSectionGrid()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2.5 border">
-                        </div>
-                        <div class="form-group">
-                            <label for="headerFormat">Header Text Style</label>
-                            <select id="headerFormat" onchange="generateList()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2.5 border">
-                                <option value="section-num">SECTION 1</option>
-                                <option value="section-num-lc">Section 1</option>
-                                <option value="section-roman">SECTION I</option>
-                                <option value="part-num">PART 1</option>
-                                <option value="plain-num">1.</option>
-                                <option value="roman-only">I.</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-3 p-2 bg-slate-50 rounded border mb-2">
-                        <input type="checkbox" id="headerDivider" checked onchange="generateList()" class="w-4 h-4 text-blue-600 rounded cursor-pointer">
-                        <label for="headerDivider" class="mb-0 text-[10px] cursor-pointer">Include Divider Line (=====)</label>
-                    </div>
-
+                <div id="multiModeSettings" class="hidden space-y-4 mb-6">
                     <div class="form-group">
-                        <label>Questions per Section</label>
+                        <label for="sectionCount">Number of Sections</label>
+                        <input type="number" id="sectionCount" value="2" min="1" onfocus="this.select()" oninput="renderSectionGrid()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-3 border">
+                    </div>
+
+                    <!-- Collapsible Header Style -->
+                    <div class="dropdown-container closed border-b border-slate-100 pb-2">
+                        <div class="dropdown-header" onclick="toggleDropdown(this.parentElement)">
+                            <label class="mb-0 cursor-pointer">Header Text Style</label>
+                            <svg class="dropdown-arrow w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="dropdown-content mt-2">
+                            <div class="grid grid-cols-2 gap-2" id="headerStylePicker">
+                                <button onclick="setHeaderFormat('section-num')" data-value="section-num" class="selector-btn active">SECTION 1</button>
+                                <button onclick="setHeaderFormat('section-num-lc')" data-value="section-num-lc" class="selector-btn">Section 1</button>
+                                <button onclick="setHeaderFormat('section-roman')" data-value="section-roman" class="selector-btn">SECTION I</button>
+                                <button onclick="setHeaderFormat('part-num')" data-value="part-num" class="selector-btn">PART 1</button>
+                                <button onclick="setHeaderFormat('plain-num')" data-value="plain-num" class="selector-btn">1.</button>
+                                <button onclick="setHeaderFormat('roman-only')" data-value="roman-only" class="selector-btn">I.</button>
+                                <button onclick="setHeaderFormat('custom')" data-value="custom" class="selector-btn col-span-2">CUSTOM NAMES</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Divider Styling -->
+                    <div class="dropdown-container closed border-b border-slate-100 pb-2">
+                        <div class="dropdown-header" onclick="toggleDropdown(this.parentElement)">
+                            <label class="mb-0 cursor-pointer">Divider Styling</label>
+                            <svg class="dropdown-arrow w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="dropdown-content mt-2 space-y-4">
+                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                <input type="checkbox" id="headerDivider" checked onchange="generateList()" class="w-5 h-5 text-blue-600 rounded cursor-pointer">
+                                <label for="headerDivider" class="mb-0 text-xs font-bold text-slate-700 cursor-pointer uppercase tracking-tight">Include Divider Line</label>
+                            </div>
+                            
+                            <div id="dividerPickerContainer" class="form-group mb-2">
+                                <label class="text-[10px] font-bold text-slate-400">Divider Symbol</label>
+                                <div class="flex gap-2" id="dividerCharPicker">
+                                    <button onclick="setDividerChar('=')" data-value="=" class="selector-btn active flex-1 py-2 text-lg font-bold">=</button>
+                                    <button onclick="setDividerChar('-')" data-value="-" class="selector-btn flex-1 py-2 text-lg font-bold">-</button>
+                                    <button onclick="setDividerChar('_')" data-value="_" class="selector-btn flex-1 py-2 text-lg font-bold">_</button>
+                                    <button onclick="setDividerChar('*')" data-value="*" class="selector-btn flex-1 py-2 text-lg font-bold">*</button>
+                                    <button onclick="setDividerChar('~')" data-value="~" class="selector-btn flex-1 py-2 text-lg font-bold">~</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group pt-2">
+                        <label id="sectionInputsLabel">Questions per Section</label>
                         <div id="sectionInputsContainer" class="section-input-grid">
                             <!-- Section Inputs -->
                         </div>
@@ -130,20 +250,20 @@
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="form-group">
                         <label for="spacing">Question Spacing</label>
-                        <input type="number" id="spacing" value="2" min="0" onfocus="this.select()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2.5 border">
+                        <input type="number" id="spacing" value="1" min="0" onfocus="this.select()" oninput="generateList()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-3 border">
                     </div>
                     <div class="form-group">
                         <label>Style</label>
-                        <div class="flex gap-1">
-                            <button onclick="setStyle('paren')" id="btnParen" class="flex-1 py-2 rounded-md border text-sm font-bold transition-all bg-blue-50 border-blue-200 text-blue-700">1)</button>
-                            <button onclick="setStyle('dot')" id="btnDot" class="flex-1 py-2 rounded-md border text-sm font-bold transition-all bg-white border-slate-200 text-slate-600">1.</button>
+                        <div class="flex gap-2 h-full items-start">
+                            <button onclick="setStyle('paren')" id="btnParen" class="flex-1 py-2.5 rounded-md border-2 border-slate-200 text-sm font-bold transition-all bg-white text-slate-600">1)</button>
+                            <button onclick="setStyle('dot')" id="btnDot" class="flex-1 py-2.5 rounded-md border-2 border-slate-200 text-sm font-bold transition-all bg-white text-slate-600">1.</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Sub-Question Feature Toggle -->
-                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200 mb-6">
-                    <input type="checkbox" id="enableSubQuestions" onchange="toggleSubQMenu()" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer">
+                <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 mb-6">
+                    <input type="checkbox" id="enableSubQuestions" onchange="toggleSubQMenu()" class="w-6 h-6 text-blue-600 rounded focus:ring-blue-500 cursor-pointer">
                     <div>
                         <label for="enableSubQuestions" class="mb-0 text-slate-800 font-bold cursor-pointer normal-case text-sm">Enable Sub-Questions</label>
                         <p class="text-[10px] text-slate-400 font-medium">Customize individual questions with a, b, c...</p>
@@ -154,23 +274,32 @@
                 <div id="subQMenu" class="hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     <div class="form-group mb-4">
                         <label for="subSpacing">Sub-Question Spacing</label>
-                        <input type="number" id="subSpacing" value="1" min="0" onfocus="this.select()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-2.5 border">
+                        <input type="number" id="subSpacing" value="1" min="0" onfocus="this.select()" oninput="generateList()" class="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm p-3 border">
                     </div>
                     
                     <label>Question Customizer</label>
-                    <div id="questionList" class="max-h-[250px] overflow-y-auto pr-2 custom-scroll border rounded-lg p-2 bg-slate-50 shadow-inner">
+                    <div id="questionList" class="max-h-[250px] overflow-y-auto pr-2 custom-scroll border rounded-lg p-3 bg-slate-50 shadow-inner">
                         <!-- Questions listed here for sub-q selection -->
                     </div>
                 </div>
 
-                <button onclick="generateList()" class="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 px-4 rounded-xl transition transform active:scale-95 shadow-lg">
-                    Update Preview
+                <button onclick="generateList()" class="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-4 rounded-xl transition transform active:scale-95 shadow-lg">
+                    Update Document
                 </button>
             </div>
 
             <!-- Output Panel -->
-            <div class="lg:col-span-7">
-                <div class="relative">
+            <div class="lg:col-span-7 flex flex-col h-full">
+                <div class="flex justify-between items-center px-1 mb-2">
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Document Preview</h2>
+                    <div class="flex gap-2">
+                        <button onclick="openFullScreen()" class="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-600 font-bold py-1.5 px-3 rounded-lg border border-slate-200 text-xs shadow-sm transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+                            Full Screen
+                        </button>
+                    </div>
+                </div>
+                <div class="relative flex-grow">
                     <textarea id="result" class="w-full h-[800px] card p-10 text-lg border-slate-200 focus:ring-2 focus:ring-blue-500 shadow-inner" readonly placeholder="Generator results will appear here..."></textarea>
                     
                     <div id="copyToast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-2 rounded-full text-sm font-medium opacity-0 transition-all pointer-events-none translate-y-2">
@@ -184,7 +313,28 @@
     <script>
         let currentStyle = 'paren';
         let currentMode = 'single';
+        let currentHeaderFormat = 'section-num';
+        let currentDividerChar = '=';
         let questionData = []; 
+        let sectionTitles = []; // Stores custom names for sections
+
+        function toggleDropdown(container) {
+            const isOpen = container.classList.contains('open');
+            container.classList.toggle('open', !isOpen);
+            container.classList.toggle('closed', isOpen);
+        }
+
+        function openFullScreen() {
+            const result = document.getElementById('result').value;
+            document.getElementById('fullscreenResult').value = result;
+            document.getElementById('fullscreenOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling background
+        }
+
+        function closeFullScreen() {
+            document.getElementById('fullscreenOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
         function toRoman(num) {
             const map = { M: 1000, CM: 900, D: 500, CD: 400, C: 100, XC: 90, L: 50, XL: 40, X: 10, IX: 9, V: 5, IV: 4, I: 1 };
@@ -218,23 +368,83 @@
             handleStructureChange();
         }
 
+        function setHeaderFormat(format) {
+            currentHeaderFormat = format;
+            document.querySelectorAll('#headerStylePicker .selector-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.value === format);
+            });
+            renderSectionGrid(); // Re-render to show/hide name inputs
+            generateList();
+        }
+
+        function setDividerChar(char) {
+            currentDividerChar = char;
+            document.querySelectorAll('#dividerCharPicker .selector-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.value === char);
+            });
+            generateList();
+        }
+
         function renderSectionGrid() {
             const container = document.getElementById('sectionInputsContainer');
+            const label = document.getElementById('sectionInputsLabel');
             const count = parseInt(document.getElementById('sectionCount').value) || 0;
             const safeCount = Math.min(count, 50);
             
-            const currentInputs = Array.from(container.querySelectorAll('input')).map(i => i.value);
+            // Capture existing state before wipe
+            const existingInputs = container.querySelectorAll('.section-item');
+            const existingValues = Array.from(existingInputs).map(item => {
+                return {
+                    name: item.querySelector('.name-input')?.value || "",
+                    count: item.querySelector('.count-input')?.value || "5"
+                };
+            });
+
             container.innerHTML = '';
             
-            for (let i = 0; i < safeCount; i++) {
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.value = currentInputs[i] || '5';
-                input.placeholder = `S${i+1}`;
-                input.onfocus = function() { this.select(); };
-                input.oninput = handleStructureChange;
-                input.className = "w-full rounded border-slate-200 text-center text-sm p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 border bg-white shadow-sm";
-                container.appendChild(input);
+            if (currentHeaderFormat === 'custom') {
+                container.classList.remove('section-input-grid');
+                label.textContent = "Section Names & Question Counts";
+                
+                for (let i = 0; i < safeCount; i++) {
+                    const row = document.createElement('div');
+                    row.className = "section-custom-row section-item";
+                    
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.placeholder = `Section ${i+1} Name...`;
+                    nameInput.value = existingValues[i]?.name || "";
+                    nameInput.className = "name-input w-full rounded border-slate-200 text-sm p-3 focus:border-blue-500 border bg-white shadow-sm";
+                    nameInput.oninput = () => { handleStructureChange(); };
+                    
+                    const countInput = document.createElement('input');
+                    countInput.type = 'number';
+                    countInput.value = existingValues[i]?.count || '5';
+                    countInput.className = "count-input w-full rounded border-slate-200 text-center text-sm p-3 focus:border-blue-500 border bg-white shadow-sm";
+                    countInput.onfocus = function() { this.select(); };
+                    countInput.oninput = () => { handleStructureChange(); };
+                    
+                    row.appendChild(nameInput);
+                    row.appendChild(countInput);
+                    container.appendChild(row);
+                }
+            } else {
+                container.classList.add('section-input-grid');
+                label.textContent = "Questions per Section";
+                
+                for (let i = 0; i < safeCount; i++) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = "section-item";
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.value = existingValues[i]?.count || '5';
+                    input.placeholder = `S${i+1}`;
+                    input.onfocus = function() { this.select(); };
+                    input.oninput = handleStructureChange;
+                    input.className = "count-input w-full rounded border-slate-200 text-center text-sm p-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 border bg-white shadow-sm transition-all";
+                    wrapper.appendChild(input);
+                    container.appendChild(wrapper);
+                }
             }
             handleStructureChange();
         }
@@ -243,6 +453,7 @@
             const enabled = document.getElementById('enableSubQuestions').checked;
             document.getElementById('subQMenu').classList.toggle('hidden', !enabled);
             if (enabled) handleStructureChange();
+            generateList();
         }
 
         function handleStructureChange() {
@@ -255,14 +466,17 @@
                     newStructure.push({ label: `${i}`, key: `q-${i}` });
                 }
             } else {
-                const sectionInputs = Array.from(document.getElementById('sectionInputsContainer').querySelectorAll('input'));
-                sectionInputs.forEach((input, sIdx) => {
-                    const qCount = parseInt(input.value) || 0;
+                const sectionItems = Array.from(document.querySelectorAll('.section-item'));
+                sectionItems.forEach((item, sIdx) => {
+                    const qCount = parseInt(item.querySelector('.count-input').value) || 0;
+                    const customTitle = item.querySelector('.name-input')?.value || `Section ${sIdx + 1}`;
+                    
                     for (let qIdx = 1; qIdx <= qCount; qIdx++) {
                         newStructure.push({ 
                             label: `S${sIdx + 1}-Q${qIdx}`, 
                             key: `s${sIdx}-q${qIdx}`,
                             sectionIdx: sIdx,
+                            sectionTitle: customTitle,
                             qNumber: qIdx
                         });
                     }
@@ -279,6 +493,7 @@
             });
 
             renderQuestionCustomizer();
+            generateList();
         }
 
         function renderQuestionCustomizer() {
@@ -290,16 +505,17 @@
                 row.className = "config-row";
 
                 const label = document.createElement('span');
-                label.className = "text-[10px] font-black text-slate-400";
+                label.className = "text-[10px] font-black text-slate-400 uppercase";
                 label.textContent = q.label;
 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = q.hasSub;
-                checkbox.className = "w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer mx-auto";
+                checkbox.className = "w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer mx-auto";
                 checkbox.onchange = (e) => {
                     q.hasSub = e.target.checked;
                     renderQuestionCustomizer();
+                    generateList();
                 };
 
                 const inputContainer = document.createElement('div');
@@ -309,8 +525,11 @@
                     subInput.value = q.subCount;
                     subInput.min = '1';
                     subInput.onfocus = function() { this.select(); };
-                    subInput.oninput = (e) => { q.subCount = parseInt(e.target.value) || 1; };
-                    subInput.className = "w-full rounded border-slate-200 text-center text-xs p-1 border bg-white";
+                    subInput.oninput = (e) => { 
+                        q.subCount = parseInt(e.target.value) || 1;
+                        generateList();
+                    };
+                    subInput.className = "w-full rounded border-slate-200 text-center text-xs p-1.5 border bg-white focus:ring-1 focus:ring-blue-400";
                     inputContainer.appendChild(subInput);
                 }
 
@@ -325,8 +544,15 @@
             currentStyle = style;
             const btnParen = document.getElementById('btnParen');
             const btnDot = document.getElementById('btnDot');
-            btnParen.className = style === 'paren' ? "flex-1 py-2 rounded-md border text-sm font-bold transition-all bg-blue-50 border-blue-200 text-blue-700 shadow-sm" : "flex-1 py-2 rounded-md border text-sm font-bold transition-all bg-white border-slate-200 text-slate-600 hover:bg-slate-50";
-            btnDot.className = style === 'dot' ? "flex-1 py-2 rounded-md border text-sm font-bold transition-all bg-blue-50 border-blue-200 text-blue-700 shadow-sm" : "flex-1 py-2 rounded-md border text-sm font-bold transition-all bg-white border-slate-200 text-slate-600 hover:bg-slate-50";
+            
+            btnParen.className = style === 'paren' 
+                ? "flex-1 py-2.5 rounded-md border-2 border-blue-500 text-sm font-bold transition-all bg-blue-50 text-blue-700 shadow-sm" 
+                : "flex-1 py-2.5 rounded-md border-2 border-slate-200 text-sm font-bold transition-all bg-white text-slate-600 hover:bg-slate-50";
+            
+            btnDot.className = style === 'dot' 
+                ? "flex-1 py-2.5 rounded-md border-2 border-blue-500 text-sm font-bold transition-all bg-blue-50 text-blue-700 shadow-sm" 
+                : "flex-1 py-2.5 rounded-md border-2 border-slate-200 text-sm font-bold transition-all bg-white text-slate-600 hover:bg-slate-50";
+            
             generateList();
         }
 
@@ -338,8 +564,6 @@
             const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
             const enableSubs = document.getElementById('enableSubQuestions').checked;
             
-            // Header Stylings
-            const hFormat = document.getElementById('headerFormat').value;
             const showDivider = document.getElementById('headerDivider').checked;
 
             let output = "";
@@ -351,18 +575,19 @@
                     const num = currentSection + 1;
                     let hText = "";
                     
-                    switch(hFormat) {
+                    switch(currentHeaderFormat) {
                         case 'section-num': hText = `SECTION ${num}`; break;
                         case 'section-num-lc': hText = `Section ${num}`; break;
                         case 'section-roman': hText = `SECTION ${toRoman(num)}`; break;
                         case 'part-num': hText = `PART ${num}`; break;
                         case 'plain-num': hText = `${num}.`; break;
                         case 'roman-only': hText = `${toRoman(num)}.`; break;
+                        case 'custom': hText = q.sectionTitle || `Section ${num}`; break;
                     }
 
                     output += `\n${hText}\n`;
                     if (showDivider) {
-                        output += "=".repeat(hText.length + 4) + "\n";
+                        output += currentDividerChar.repeat(hText.length + 4) + "\n";
                     }
                     output += "\n";
                 }
@@ -381,10 +606,14 @@
             });
 
             textarea.value = output.trim();
+            // Also sync the fullscreen text if it's currently open
+            if (document.getElementById('fullscreenOverlay').classList.contains('active')) {
+                document.getElementById('fullscreenResult').value = textarea.value;
+            }
         }
 
-        function copyToClipboard() {
-            const textarea = document.getElementById('result');
+        function copyToClipboard(elementId) {
+            const textarea = document.getElementById(elementId);
             textarea.select();
             document.execCommand('copy');
             const toast = document.getElementById('copyToast');
@@ -399,7 +628,13 @@
 
         window.onload = () => {
             setMode('single');
+            setStyle('paren');
         };
+
+        // Esc key listener to close fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeFullScreen();
+        });
     </script>
 </body>
 </html>
